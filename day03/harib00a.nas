@@ -42,14 +42,34 @@ entry:
         MOV     CH,0                ; 柱面0
         MOV     DH,0                ; 磁头0
         MOV     CL,2                ; 扇区2
-        MOV     AH,0x02             ; AH=0x02 : 读盘
-        MOV     AL,1                ; 1个扇区
-        MOV     BX,0
-        MOV     DL,0x00             ; A驱动器
-        INT     0x13                ; 调用磁盘BIOS
-        JC      error               ; 出现错误跳转到error
+
 
 ; 虽然读完了，但是因为暂时没有要做的事所以停止等待指令
+readloop:
+		MOV SI, 0					; 记录失败次数寄存器
+
+retry:
+		MOV		AH,0x02				; AH=0x02, 读入cipan
+		MOV		AL,1				; 1个扇区
+		MOV		BX,0
+		MOV		DL,0x00				; A驱动器
+		INT 	0x13				; 调用磁盘BIOS
+		JNC		next				; 没出错的话跳转到next, 继续读盘
+		ADD 	SI,1 				; 往SI加1
+		CMP 	SI,5 				; 比较SI与5
+		JAE 	error 				; SI >= 5时，跳转到error
+		MOV 	AH,0x00
+		MOV 	DL,0x00 			; A驱动器
+		INT 	0x13 				; 重置驱动器
+		JMP 	retry
+
+next:
+		MOV 	AX,ES				; ES用来指定读入地址，把ES中的内存地址往后移0x200
+		ADD		AX,0x0020
+		MOV		ES,AX				; 寄存器中没有直接加入的函数，因此这里需要绕个弯
+		ADD		CL,1				; 扇区 + 1
+		CMP		CL,18				; 比较CL和18
+		JBE		readloop			; 如果 CL <= 18 跳转至readloop	
 
 fin:
         HLT                         ; 让CPU停止，等待指令
@@ -70,8 +90,9 @@ putloop:
 
 msg:
         DB      0x0a, 0x0a          ; 换行两次
-        DB      "load error"
+        DB      "load faild"
         DB      0x0a
         DB      0
         RESB    0x7dfe-$
         DB      0x55, 0xaa
+
