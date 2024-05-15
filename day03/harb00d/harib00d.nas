@@ -14,7 +14,7 @@
         DB      2                   ; FAT的个数（必须为2）
         DW      224                 ; 根目录的大小（一般设成224项）
         DW      2880                ; 该磁盘的大小（必须是2880扇区）
-        DB      0xf0                ; 磁盘的种类（必须是0xf0)
+        DB      0xf0                ; 磁盘的种类（必须是0xf0）
         DW      9                   ; FAT的长度（必须是9扇区）
         DW      18                  ; 一个磁道（track)有几个扇区（必须是18）
         DW      2                   ; 磁头数（必须是2）
@@ -43,33 +43,33 @@ entry:
         MOV     DH,0                ; 磁头0
         MOV     CL,2                ; 扇区2
 
-
 ; 虽然读完了，但是因为暂时没有要做的事所以停止等待指令
+
 readloop:
-		MOV SI, 0					; 记录失败次数寄存器
+        MOV     SI, 0               ; 记录失败次数寄存器
 
 retry:
-		MOV		AH,0x02				; AH=0x02, 读入cipan
-		MOV		AL,1				; 1个扇区
-		MOV		BX,0
-		MOV		DL,0x00				; A驱动器
-		INT 	0x13				; 调用磁盘BIOS
-		JNC		next				; 没出错的话跳转到next, 继续读盘
-		ADD 	SI,1 				; 往SI加1
-		CMP 	SI,5 				; 比较SI与5
-		JAE 	error 				; SI >= 5时，跳转到error
-		MOV 	AH,0x00
-		MOV 	DL,0x00 			; A驱动器
-		INT 	0x13 				; 重置驱动器
-		JMP 	retry
+        MOV     AH,0x02             ; AH=0x02, 读入扇区
+        MOV     AL,1                ; 1个扇区
+        MOV     BX,0
+        MOV     DL,0x00             ; A驱动器
+        INT     0x13                ; 调用磁盘BIOS
+        JNC     next                ; 没出错的话跳转到next, 继续读盘
+        ADD     SI,1                ; 往SI加1
+        CMP     SI,5                ; 比较SI与5
+        JAE     error               ; SI >= 5时，跳转到error
+        MOV     AH,0x00
+        MOV     DL,0x00             ; A驱动器
+        INT     0x13                ; 重置驱动器
+        JMP     retry
 
 next:
-		MOV 	AX,ES				; ES用来指定读入地址，把ES中的内存地址往后移0x200
-		ADD		AX,0x0020
-		MOV		ES,AX				; 寄存器中没有直接加入的函数，因此这里需要绕个弯
-		ADD		CL,1				; 扇区 + 1
-		CMP		CL,18				; 比较CL和18
-		JBE		readloop			; 如果 CL <= 18 跳转至readloop	
+        MOV     AX,ES               ; ES用来指定读入地址，把ES中的内存地址往后移0x200
+        ADD     AX,0x0020
+        MOV     ES,AX               ; 寄存器中没有直接加法的函数，因此这里需要绕个弯
+        ADD     CL,1                ; 扇区 + 1
+        CMP     CL,18               ; 比较CL和18
+        JBE     readloop            ; 如果 CL <= 18 跳转至readloop
 
 fin:
         HLT                         ; 让CPU停止，等待指令
@@ -90,9 +90,8 @@ putloop:
 
 msg:
         DB      0x0a, 0x0a          ; 换行两次
-        DB      "load faild"
+        DB      "load error"
         DB      0x0a
         DB      0
         RESB    0x7dfe-$
         DB      0x55, 0xaa
-
