@@ -38,7 +38,7 @@
     36 00007C5A 8E C0                                   MOV     ES,AX
     37 00007C5C                                 
     38 00007C5C                                 ; 读光盘
-    39 00007C5C                                 
+    39  = 0000000A                                      CYLS    EQU 10
     40 00007C5C B8 0820                                 MOV     AX,0x0820
     41 00007C5F 8E C0                                   MOV     ES,AX
     42 00007C61 B5 00                                   MOV     CH,0                ; 柱面0
@@ -59,7 +59,7 @@
     57 00007C75 73 10                                   JNC     next                ; 没出错的话跳转到next, 继续读盘
     58 00007C77 83 C6 01                                ADD     SI,1                ; 往SI加1
     59 00007C7A 83 FE 05                                CMP     SI,5                ; 比较SI与5
-    60 00007C7D 73 1A                                   JAE     error               ; SI >= 5时，跳转到error
+    60 00007C7D 73 2E                                   JAE     error               ; SI >= 5时，跳转到error
     61 00007C7F B4 00                                   MOV     AH,0x00
     62 00007C81 B2 00                                   MOV     DL,0x00             ; A驱动器
     63 00007C83 CD 13                                   INT     0x13                ; 重置驱动器
@@ -72,32 +72,38 @@
     70 00007C8E 80 C1 01                                ADD     CL,1                ; 扇区 + 1
     71 00007C91 80 F9 12                                CMP     CL,18               ; 比较CL和18
     72 00007C94 76 D1                                   JBE     readloop            ; 如果 CL <= 18 跳转至readloop
-    73 00007C96                                 
-    74 00007C96                                 fin:
-    75 00007C96 F4                                      HLT                         ; 让CPU停止，等待指令
-    76 00007C97 EB FD                                   JMP     fin                 ; 无限循环
-    77 00007C99                                 
-    78 00007C99                                 error:
-    79 00007C99 BE 7CAE                                 MOV     SI,msg
-    80 00007C9C                                 
-    81 00007C9C                                 putloop:
-    82 00007C9C 8A 04                                   MOV     AL,[SI]
-    83 00007C9E 83 C6 01                                ADD     SI,1                ; 给SI加1
-    84 00007CA1 3C 00                                   CMP     AL,0
-    85 00007CA3 74 F1                                   JE      fin
-    86 00007CA5 B4 0E                                   MOV     AH,0x0e             ; 显示一个文字
-    87 00007CA7 BB 000A                                 MOV     BX,10               ; 指定字符颜色
-    88 00007CAA CD 10                                   INT     0x10                ; 调用显卡BIOS
-    89 00007CAC EB EE                                   JMP     putloop
-    90 00007CAE                                 
-    91 00007CAE                                 msg:
-    92 00007CAE 0A 0A                                   DB      0x0a, 0x0a          ; 换行两次
-    93 00007CB0 6C 6F 61 64 20 65 72 72 6F 72           DB      "load error"
-    94 00007CBA 0A                                      DB      0x0a
-    95 00007CBB 00                                      DB      0
-    96 00007CBC 00 00 00 00 00 00 00 00 00 00           RESB    0x7dfe-$
-       00007CC6 00 00 00 00 00 00 00 00 00 00 
-       00007CD0 00 00 00 00 00 00 00 00 00 00 
+    73 00007C96 B1 01                                   MOV     CL,1
+    74 00007C98 80 C6 01                                ADD     DH,1
+    75 00007C9B 80 FE 02                                CMP     DH,2
+    76 00007C9E 72 C7                                   JB      readloop ; 如果DH < 2，则跳转到readloop
+    77 00007CA0 B6 00                                   MOV     DH,0
+    78 00007CA2 80 C5 01                                ADD     CH,1
+    79 00007CA5 80 FD 0A                                CMP     CH,CYLS
+    80 00007CA8 72 BD                                   JB      readloop ; 如果CH < CYLS，则跳转到readloop
+    81 00007CAA                                 
+    82 00007CAA                                 fin:
+    83 00007CAA F4                                      HLT                         ; 让CPU停止，等待指令
+    84 00007CAB EB FD                                   JMP     fin                 ; 无限循环
+    85 00007CAD                                 
+    86 00007CAD                                 error:
+    87 00007CAD BE 7CC2                                 MOV     SI,msg
+    88 00007CB0                                 
+    89 00007CB0                                 putloop:
+    90 00007CB0 8A 04                                   MOV     AL,[SI]
+    91 00007CB2 83 C6 01                                ADD     SI,1                ; 给SI加1
+    92 00007CB5 3C 00                                   CMP     AL,0
+    93 00007CB7 74 F1                                   JE      fin
+    94 00007CB9 B4 0E                                   MOV     AH,0x0e             ; 显示一个文字
+    95 00007CBB BB 000A                                 MOV     BX,10               ; 指定字符颜色
+    96 00007CBE CD 10                                   INT     0x10                ; 调用显卡BIOS
+    97 00007CC0 EB EE                                   JMP     putloop
+    98 00007CC2                                 
+    99 00007CC2                                 msg:
+   100 00007CC2 0A 0A                                   DB      0x0a, 0x0a          ; 换行两次
+   101 00007CC4 6C 6F 61 64 20 65 72 72 6F 72           DB      "load error"
+   102 00007CCE 0A                                      DB      0x0a
+   103 00007CCF 00                                      DB      0
+   104 00007CD0 00 00 00 00 00 00 00 00 00 00           RESB    0x7dfe-$
        00007CDA 00 00 00 00 00 00 00 00 00 00 
        00007CE4 00 00 00 00 00 00 00 00 00 00 
        00007CEE 00 00 00 00 00 00 00 00 00 00 
@@ -128,4 +134,4 @@
        00007DE8 00 00 00 00 00 00 00 00 00 00 
        00007DF2 00 00 00 00 00 00 00 00 00 00 
        00007DFC 00 00 
-    97 00007DFE 55 AA                                   DB      0x55, 0xaa
+   105 00007DFE 55 AA                                   DB      0x55, 0xaa

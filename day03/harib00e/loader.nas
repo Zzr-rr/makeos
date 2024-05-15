@@ -36,7 +36,7 @@ entry:
         MOV     ES,AX
 
 ; 读光盘
-
+        CYLS    EQU 10
         MOV     AX,0x0820
         MOV     ES,AX
         MOV     CH,0                ; 柱面0
@@ -70,6 +70,17 @@ next:
         ADD     CL,1                ; 扇区 + 1
         CMP     CL,18               ; 比较CL和18
         JBE     readloop            ; 如果 CL <= 18 跳转至readloop
+        MOV     CL,1
+        ADD     DH,1
+        CMP     DH,2
+        JB      readloop ; 如果DH < 2，则跳转到readloop
+        MOV     DH,0
+        ADD     CH,1
+        CMP     CH,CYLS
+        JB      readloop ; 如果CH < CYLS，则跳转到readloop
+        ; 阅读完之后，运行sys操作系统
+        MOV     [0x0ff0], CH    ; 将CYLS的值送到0x0ff0当中，为了告诉sys磁盘装载内容的结束位置，因为cyls代表了10个柱面。
+        JMP     0xc200
 
 fin:
         HLT                         ; 让CPU停止，等待指令
@@ -95,3 +106,4 @@ msg:
         DB      0
         RESB    0x7dfe-$
         DB      0x55, 0xaa
+
