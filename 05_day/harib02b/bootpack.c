@@ -24,14 +24,36 @@ void set_palette(int start, int end, unsigned char *rgb);
 #define COL8_008484 14
 #define COL8_848484 15
 
+
+
+struct BOOTINFO {
+    /*
+    CYLS	EQU		0x0ff0			; 引导扇区设置
+    LEDS	EQU		0x0ff1
+    VMODE	EQU		0x0ff2			; 关于颜色的信息
+    SCRNX	EQU		0x0ff4			; 分辨率X
+    SCRNY	EQU		0x0ff6			; 分辨率Y
+    VRAM	EQU		0x0ff8			; 图像缓冲区的起始地址
+    */
+    // char 一个字节
+    char cyls, leds, vmode, reserve;
+    short scrnx, scrny;
+    char *vram;
+};
+
 void HariMain(void)
 {
     char *vram;
     int xsize, ysize;
+    struct BOOTINFO *binfo;
+
+
     init_palette();
-    vram = (char *) 0xa0000;
-    xsize = 320;
-    ysize = 200;
+    binfo = (struct BOOTINFO *) 0x0ff0;
+    xsize = (*binfo).scrnx;
+    ysize = (*binfo).scrny;
+    vram  = (*binfo).vram;
+
     boxfill8(vram, xsize, COL8_008484, 0, 0, xsize - 1, ysize - 29);
     boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 28, xsize - 1, ysize - 28);
     boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - 27, xsize - 1, ysize - 27);

@@ -6,6 +6,7 @@ int io_load_eflags(void);
 void io_store_eflags(int eflags);
 void init_palette(void);
 void set_palette(int start, int end, unsigned char *rgb);
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font);
 
 #define COL8_000000 0
 #define COL8_FF0000 1
@@ -24,14 +25,42 @@ void set_palette(int start, int end, unsigned char *rgb);
 #define COL8_008484 14
 #define COL8_848484 15
 
+
+
+struct BOOTINFO {
+    /*
+    CYLS	EQU		0x0ff0			; 引导扇区设置
+    LEDS	EQU		0x0ff1
+    VMODE	EQU		0x0ff2			; 关于颜色的信息
+    SCRNX	EQU		0x0ff4			; 分辨率X
+    SCRNY	EQU		0x0ff6			; 分辨率Y
+    VRAM	EQU		0x0ff8			; 图像缓冲区的起始地址
+    */
+    // char 一个字节
+    char cyls, leds, vmode, reserve;
+    short scrnx, scrny;
+    char *vram;
+};
+
+static char font_A[16] = {
+    0x00, 0x18, 0x18, 0x18, 0x18, 0x24, 0x24, 0x24,
+    0x24, 0x7e, 0x42, 0x42, 0x42, 0xe7, 0x00, 0x00
+};
+
+
 void HariMain(void)
 {
     char *vram;
     int xsize, ysize;
+    struct BOOTINFO *binfo;
+
+
     init_palette();
-    vram = (char *) 0xa0000;
-    xsize = 320;
-    ysize = 200;
+    binfo = (struct BOOTINFO *) 0x0ff0;
+    xsize = (*binfo).scrnx;
+    ysize = (*binfo).scrny;
+    vram  = (*binfo).vram;
+
     boxfill8(vram, xsize, COL8_008484, 0, 0, xsize - 1, ysize - 29);
     boxfill8(vram, xsize, COL8_C6C6C6, 0, ysize - 28, xsize - 1, ysize - 28);
     boxfill8(vram, xsize, COL8_FFFFFF, 0, ysize - 27, xsize - 1, ysize - 27);
@@ -46,9 +75,29 @@ void HariMain(void)
     boxfill8(vram, xsize, COL8_848484, xsize - 47, ysize - 23, xsize - 47, ysize - 4);
     boxfill8(vram, xsize, COL8_FFFFFF, xsize - 47, ysize - 3, xsize - 4, ysize - 3);
     boxfill8(vram, xsize, COL8_FFFFFF, xsize - 3, ysize - 24, xsize - 3, ysize - 3);
+    putfont8(vram, xsize, 0, 0, COL8_000000, font_A);
     for (;;) {
         io_hlt();
     }
+}
+
+void putfont8(char *vram, int xsize, int x, int y, char c, char *font)
+{
+    int i;
+    char *p, d;
+    for (i = 0; i < 16; i++) {
+        p = vram + (y + i) * xsize + x;
+        d = font[i];
+        if ((d & 0x80) != 0) { p[0] = c; }
+        if ((d & 0x40) != 0) { p[1] = c; }
+        if ((d & 0x20) != 0) { p[2] = c; }
+        if ((d & 0x10) != 0) { p[3] = c; }
+        if ((d & 0x08) != 0) { p[4] = c; }
+        if ((d & 0x04) != 0) { p[5] = c; }
+        if ((d & 0x02) != 0) { p[6] = c; }
+        if ((d & 0x01) != 0) { p[7] = c; }
+    }
+    return;
 }
 
 void boxfill8(unsigned char *vram, int xsize, unsigned char c, int x0, int y0, int x1, int y1)
