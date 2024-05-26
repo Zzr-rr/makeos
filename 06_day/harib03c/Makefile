@@ -43,8 +43,6 @@ run :clean haribote.img
 
 clean:
 	-$(DEL) ${LOADER}.bin 
-	-$(DEL) ${SRC}.sys 
-	-$(DEL) ${SRC}.lst
 	-$(DEL) bootpack.obj
 	-$(DEL) bootpack.bim
 	-$(DEL) bootpack.map
@@ -62,14 +60,20 @@ clean:
 asmhead.bin : asmhead.nas Makefile
 	$(NASK) asmhead.nas asmhead.bin asmhead.lst
 
-bootpack.gas : bootpack.c Makefile
-	$(CC1) -o bootpack.gas bootpack.c
+%.gas : %.c Makefile
+	$(CC1) -o $*.gas $*.c
 
-bootpack.nas : bootpack.gas Makefile
-	$(GAS2NASK) bootpack.gas bootpack.nas
+%.nas : %.gas Makefile
+	$(GAS2NASK) $*.gas $*.nas
 
 bootpack.obj : bootpack.nas Makefile
 	$(NASK) bootpack.nas bootpack.obj bootpack.lst
+
+dsctbl.obj : dsctbl.nas Makefile
+	$(NASK) dsctbl.nas dsctbl.obj dsctbl.lst
+
+graphic.obj : graphic.nas Makefile
+	$(NASK) graphic.nas graphic.obj graphic.lst
 
 naskfunc.obj : naskfunc.nas Makefile
 	$(NASK) naskfunc.nas naskfunc.obj naskfunc.lst
@@ -80,29 +84,9 @@ hankaku.bin : hankaku.txt Makefile
 hankaku.obj : hankaku.bin Makefile
 	$(BIN2OBJ) hankaku.bin hankaku.obj _hankaku
 
-dsctbl.gas : dsctbl.c Makefile
-	$(CC1) -o dsctbl.gas dsctbl.c
-
-dsctbl.nas : dsctbl.gas Makefile
-	$(GAS2NASK) dsctbl.gas dsctbl.nas
-
-dsctbl.obj : dsctbl.nas Makefile
-	$(NASK) dsctbl.nas dsctbl.obj dsctbl.lst
-
-graphic.gas : graphic.c Makefile
-	$(CC1) -o graphic.gas graphic.c
-
-graphic.nas : graphic.gas Makefile
-	$(GAS2NASK) graphic.gas graphic.nas
-
-graphic.obj : graphic.nas Makefile
-	$(NASK) graphic.nas graphic.obj graphic.lst
-
 bootpack.bim : bootpack.obj graphic.obj dsctbl.obj naskfunc.obj hankaku.obj Makefile
 	$(OBJ2BIM) @$(RULEFILE) out:bootpack.bim stack:3136k map:bootpack.map \
 		bootpack.obj graphic.obj dsctbl.obj naskfunc.obj hankaku.obj
-
-
 
 bootpack.hrb : bootpack.bim Makefile
 	$(BIM2HRB) bootpack.bim bootpack.hrb 0

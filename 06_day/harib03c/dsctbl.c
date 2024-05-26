@@ -1,12 +1,3 @@
-/*告诉C编译器，有一个函数在别的文件里*/
-void io_hlt(void);
-void io_cli(void);
-void io_out8(int port, int data);
-int io_load_eflags(void);
-void io_store_eflags(int eflags);
-void init_gdtidt(void);
-
-
 /**
  * SEGMENT_DESCRIPTOR: 全局段号记录表
  * GDTR 特殊寄存器，存储GDT的基本信息
