@@ -1,0 +1,76 @@
+[FORMAT "WCOFF"]
+[INSTRSET "i486p"]
+[OPTIMIZE 1]
+[OPTION 1]
+[BITS 32]
+	EXTERN	_init_palette
+	EXTERN	_init_screen
+	EXTERN	_putfonts8_asc
+	EXTERN	_sprintf
+	EXTERN	_io_hlt
+[FILE "bootpack.c"]
+[SECTION .data]
+LC0:
+	DB	"Haribote OS.",0x00
+LC1:
+	DB	"LJY 520.",0x00
+LC2:
+	DB	"scrnx = %d",0x00
+[SECTION .text]
+	GLOBAL	_HariMain
+_HariMain:
+	PUSH	EBP
+	MOV	EBP,ESP
+	PUSH	EBX
+	SUB	ESP,48
+	LEA	EBX,DWORD [-52+EBP]
+	CALL	_init_palette
+	MOVSX	EAX,WORD [4086]
+	PUSH	EAX
+	MOVSX	EAX,WORD [4084]
+	PUSH	EAX
+	PUSH	DWORD [4088]
+	CALL	_init_screen
+	PUSH	LC0
+	PUSH	7
+	PUSH	8
+	PUSH	8
+	MOVSX	EAX,WORD [4084]
+	PUSH	EAX
+	PUSH	DWORD [4088]
+	CALL	_putfonts8_asc
+	ADD	ESP,36
+	PUSH	LC1
+	PUSH	0
+	PUSH	31
+	PUSH	31
+	MOVSX	EAX,WORD [4084]
+	PUSH	EAX
+	PUSH	DWORD [4088]
+	CALL	_putfonts8_asc
+	PUSH	LC1
+	PUSH	7
+	PUSH	30
+	PUSH	30
+	MOVSX	EAX,WORD [4084]
+	PUSH	EAX
+	PUSH	DWORD [4088]
+	CALL	_putfonts8_asc
+	ADD	ESP,48
+	MOVSX	EAX,WORD [4086]
+	PUSH	EAX
+	PUSH	LC2
+	PUSH	EBX
+	CALL	_sprintf
+	PUSH	EBX
+	PUSH	7
+	PUSH	64
+	PUSH	16
+	MOVSX	EAX,WORD [4084]
+	PUSH	EAX
+	PUSH	DWORD [4088]
+	CALL	_putfonts8_asc
+	ADD	ESP,36
+L2:
+	CALL	_io_hlt
+	JMP	L2
